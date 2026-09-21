@@ -1,0 +1,42 @@
+﻿services:
+  postgres:
+    image: postgres:15
+    container_name: postgres_engenharia
+    environment:
+      POSTGRES_USER: engenheiro
+      POSTGRES_PASSWORD: SENHA_SEGURA_123
+      POSTGRES_DB: data_warehouse
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_visual
+    environment:
+      PGADMIN_DEFAULT_EMAIL: estudante@email.com
+      PGADMIN_DEFAULT_PASSWORD: SENHA_VISUAL_123
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+
+  airflow-webserver:
+    image: apache/airflow:2.7.1
+    container_name: airflow_maestro_visual
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://engenheiro:SENHA_SEGURA_123@postgres:5432/data_warehouse
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    ports:
+      - "8085:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+    command: webserver
+
+volumes:
+  postgres_data:
